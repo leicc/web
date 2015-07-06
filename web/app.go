@@ -7,7 +7,7 @@ import (
 )
 
 func main() {
-	log := core.NewLoger("./cache/log", 2)
+	log := core.NewLoger(2, "./cache/log", "default")
 	fmt.Println(log)
 	core.Log(1, "1111", "aaaaaaa", "cccccccccccc")
 	core.Log(2, "2222", "aaaaaaa", "cccccccccccc")

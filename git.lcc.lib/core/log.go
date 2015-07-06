@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"log"
 	"os"
-	"time"
 )
 
 const (
@@ -17,24 +16,26 @@ const (
 
 type CoreLoger struct {
 	*log.Logger
-	dir  string
 	mask int8
 }
 
-func NewLoger(dir string, mask int8) *CoreLoger {
+func NewLoger(mask int8, dir, fname string) *CoreLoger {
 	if mask < 1 {
 		mask = 0
 	}
 	if dir == "" {
 		dir = "./log"
 	}
+	if fname == "" {
+		fname = "default"
+	}
 	os.MkdirAll(dir, 0644)
-	file := fmt.Sprintf("%s/%s.log", dir, time.Now().Format("20060102"))
+	file := fmt.Sprintf("%s/%s.log", dir, fname)
 	fs, err := os.OpenFile(file, os.O_APPEND|os.O_CREATE, 0644)
 	if err != nil {
 		fs = os.Stdout
 	}
-	loger := &CoreLoger{log.New(fs, "", log.Lshortfile|log.Ldate|log.Ltime), dir, mask}
+	loger := &CoreLoger{log.New(fs, "", log.Lshortfile|log.Ldate|log.Ltime), mask}
 	return loger
 }
 
@@ -50,7 +51,11 @@ func (this *CoreLoger) Writef(mask int8, format string, v ...interface{}) {
 	}
 }
 
-var std = NewLoger("./cache/log", 8)
+var std = NewLoger(8, "./cache/log", "")
+
+func SetStd(clog *CoreLoger) {
+	std = clog
+}
 
 func Log(mask int8, v ...interface{}) {
 	std.Write(mask, v...)
