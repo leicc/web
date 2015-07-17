@@ -1,0 +1,35 @@
+package orm
+
+const (
+	DT_SQL         = "sql"
+	DT_AUTO        = "auto"
+	DT_BINARY      = "binary"
+	OP_AS          = "AS"
+	OP_MAX         = "MAX"
+	OP_MIN         = "MIN"
+	OP_SUM         = "SUM"
+	OP_AVG         = "AVG"
+	OP_COUNT       = "COUNT"
+	OP_EQ          = "="
+	OP_NE          = "<>"
+	OP_GT          = ">"
+	OP_LT          = "<"
+	OP_GE          = ">="
+	OP_LE          = "<="
+	OP_BETWEEN     = "BETWEEN"
+	OP_LIKE        = "LIKE"
+	OP_NOTLIKE     = "NOT LIKE"
+	OP_REGEXP      = "REGEXP"
+	OP_ISNULL      = "IS NULL"
+	OP_ISNOTNULL   = "IS NOT NULL"
+	OP_IN          = "IN"
+	OP_NOTIN       = "NOT IN"
+	OP_AND         = "AND"
+	OP_OR          = "OR"
+	OP_NOT         = "NOT"
+	OP_SQL         = "SQL"
+	ASC            = "ASC"
+	DESC           = "DESC"
+	SQLMODE_QUERY  = 1
+	SQLMODE_OPDATA = 0
+)

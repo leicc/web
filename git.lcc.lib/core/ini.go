@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"crypto/md5"
 	"fmt"
+	"log"
 	"os"
+	"path/filepath"
 	"strings"
 	"sync"
 )
@@ -30,10 +32,10 @@ func readFromCache(hash, entery, key string) (val string, isok bool) {
 func pushIntoCache(hash, entery, key, str string) {
 	mutex.Lock()
 	defer mutex.Unlock()
-	if _, isok := localIniStore[hash][key]; !isok {
+	if _, isok := localIniStore[hash][entery]; !isok {
 		localIniStore[hash][entery] = make(iniNodeItem)
-		localIniStore[hash][entery][key] = str
 	}
+	localIniStore[hash][entery][key] = str
 }
 
 func cleanFromCache(hash string) {
@@ -97,6 +99,31 @@ func (this *IniConfig) GetItem(entery, key string) string {
 		pushIntoCache(this.hash, entery, key, str)
 	}
 	return str
+}
+
+func (this *IniConfig) PutItem(entery, key, value string) {
+	pushIntoCache(this.hash, entery, key, value)
+}
+
+func (this *IniConfig) Format2File() {
+	absfile, _ := filepath.Abs(this.file)
+	dir := filepath.Dir(absfile)
+	os.MkdirAll(dir, 0777)
+	fp, err := os.OpenFile(absfile, os.O_CREATE|os.O_RDWR|os.O_TRUNC, 0644)
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		fp.Sync()
+		fp.Close()
+	}()
+	for entry, items := range localIniStore[this.hash] {
+		fmt.Fprintf(fp, "[%s]\r\n", entry)
+		for key, value := range items {
+			fmt.Fprintf(fp, "%s=%s\r\n", key, value)
+		}
+		fmt.Fprint(fp, "\r\n")
+	}
 }
 
 func (this *IniConfig) ReLoad() {

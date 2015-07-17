@@ -2,27 +2,31 @@ package main
 
 import (
 	"fmt"
-	"git.lcc.lib/core"
-	"git.lcc.lib/verify"
+	"git.lcc.lib/orm"
+
+	// "math/rand"
+	"os"
+	"time"
 )
 
 func main() {
-	log := core.NewLoger(2, "./cache/log", "default")
-	fmt.Println(log)
-	core.Log(1, "1111", "aaaaaaa", "cccccccccccc")
-	core.Log(2, "2222", "aaaaaaa", "cccccccccccc")
-	core.Log(3, "2222", "aaaaaaa", "cccccccccccc")
+	dbQuery := orm.NewOrmQuery("mysql", "root:@tcp(127.0.0.1:3306)/test?charset=utf8")
 
-	core.Logf(1, "%s-%s-%s", "333333333", "aaaaaaa", "cccccccccccc")
-	core.Logf(4, "%s-%s-%s", "333333333", "aaaaaaa", "cccccccccccc")
+	//dbQuery.Table("user")
+	user := dbQuery.Table("user").Where("id", "2147483647").GetRow()
 
-	fmt.Println(verify.Email("lchenchun@sina.com.12"))
+	//list := dbQuery.Clear("where", "table").Table("user").OrderBy("id", orm.ASC).Field("id").GetList(0, -1)
 
-	fmt.Println(verify.Phone("135140768061"))
+	cls := dbQuery.Clear().Table("user").OrderBy("id", orm.ASC).GroupBy("id").Having("id=1").Field("id").GetColumn(0, -1)
 
-	fmt.Println(verify.Numeric("13aa516"))
+	nrow := dbQuery.Clear().Table("user").Where("id", 5, orm.OP_GT).Delete()
 
-	fmt.Println(verify.Alpha("13516"))
+	nid := dbQuery.Clear().Table("User").Insert(map[string]interface{}{"id": 0, "user": "leichenchun", "age": 30, "ip": "192.168.19.53", "stime": time.Now()})
 
-	fmt.Println(verify.Ip("1a1.0.11.0"))
+	arow := dbQuery.Clear().Table("User").Where("id", 2).Update(map[string]interface{}{"user": "lchenchun", "age": 29, "ip": "192.168.19.79", "stime": time.Now()})
+
+	aval := dbQuery.Clear().Table("User").Where("id", 2).Field("user").GetValue()
+	fmt.Println(user, cls, nrow, aval, nid, arow, dbQuery)
+	os.Exit(0)
+
 }
