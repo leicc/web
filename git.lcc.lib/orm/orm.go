@@ -1,5 +1,10 @@
 package orm
 
+import (
+	"git.lcc.lib/core"
+	"strconv"
+)
+
 const (
 	DT_SQL         = "sql"
 	DT_AUTO        = "auto"
@@ -33,3 +38,54 @@ const (
 	SQLMODE_QUERY  = 1
 	SQLMODE_OPDATA = 0
 )
+
+var (
+	dbIniFile string
+)
+
+func init() {
+	dbIniFile = "./config/db.ini"
+}
+
+func SetDBIni(inifile string) {
+	dbIniFile = inifile
+}
+
+func DB(dbini string) *OrmQuery {
+	var err error
+	max_open_conns, max_idle_conns := 0, 0
+	ini := core.NewIni(dbIniFile)
+	dsn := ini.GetItem(dbini, "Dsn")
+	driver := ini.GetItem(dbini, "Driver")
+	open_conns := ini.GetItem(dbini, "MaxOpenConns")
+	idle_conns := ini.GetItem(dbini, "MaxIdleConns")
+	if max_open_conns, err = strconv.Atoi(open_conns); err != nil || max_open_conns < 1 {
+		max_open_conns = 128
+	}
+	if max_idle_conns, err = strconv.Atoi(idle_conns); err != nil || max_idle_conns < 1 {
+		max_idle_conns = 64
+	}
+	db := NewOrmQuery(driver, dsn, max_open_conns, max_idle_conns)
+	return db
+}
+
+type Model struct {
+	db     *OrmQuery
+	table  string
+	pri_id int64
+	fields map[string]string
+}
+
+func (this *Model) Init(dbini, table string, field map[string]string) {
+	this.table = table
+	this.field = field
+	this.db = DB(dbini)
+}
+
+func (this *Model) NewOne(fields map[string]string) int64 {
+	this.db.Table(this.table).Insert(fields)
+}
+
+func (this *Model) GetOne(id int64) map[string]string {
+	this.db.Table(this.table).Where(this.pri_id, id).GetRow()
+}

@@ -29,9 +29,19 @@ func IsIp(vdata string) bool {
 	return ip.MatchString(vdata)
 }
 
+func IsDateTime(vdata string) bool {
+	dttmrex := regexp.MustCompile(`^[0-9]{4}\-[0-9]{2}\-[0-9]{2}[\s]{1,4}[0-9]{1,2}\:[0-9]{1,2}\:[0-9]{1,2}$`)
+	return dttmrex.MatchString(vdata)
+}
+
 func IsDate(vdata string) bool {
 	date := regexp.MustCompile(`^[0-9]{4}\-[0-9]{2}\-[0-9]{2}$`)
 	return date.MatchString(vdata)
+}
+
+func IsTime(vdata string) bool {
+	tmrex := regexp.MustCompile(`^[0-9]{1,2}\:[0-9]{1,2}\:[0-9]{1,2}$`)
+	return tmrex.MatchString(vdata)
 }
 
 func IsIdCard(vdata string) bool {
@@ -44,10 +54,14 @@ func IsUserName(vdata string) bool {
 	return user.MatchString(vdata)
 }
 
-func IsPasswd(vdata string) bool {
-	//要求六位以上且还有英文和字母
+func IsPasswd(vdata string) bool { //要求六位以上且还有英文和字母
 	isnull := regexp.MustCompile(`^[^\s]{6,}$`)
 	isalpha := regexp.MustCompile(`[a-zA-Z]`)
 	isnumeric := regexp.MustCompile(`[0-9]`)
 	return isnull.MatchString(vdata) && isnumeric.MatchString(vdata) && isalpha.MatchString(vdata)
+}
+
+func IsChinese(vdata string) bool {
+	chinese := regexp.MustCompile(`^[\u4e00-\u9fa5]{1,}$`)
+	return chinese.MatchString(vdata)
 }

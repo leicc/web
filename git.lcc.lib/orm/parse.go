@@ -8,33 +8,19 @@ import (
 )
 
 type OrmParse struct {
-	db      *sql.DB
-	tx      *sql.Tx
-	marks   []interface{}
-	driver  string
-	dsn     string
-	isOpend bool
+	db    *sql.DB
+	tx    *sql.Tx
+	marks []interface{}
 }
 
-type IOrmParser interface {
-	Open()
-	ParseSql(args map[string]interface{}) string
-	GetFirst(query string) map[string]string
-	GetAll(query string, offset, limit int) []map[string]string
-	Execute(query string, sqlmode int8) interface{}
-	Begin() bool
-	Rollback()
-	Commit()
-	Close()
-	fetch(isonlyfirst bool) []map[string]string
-	parseSqlTable(tables []tableSt, isalias bool) string
-	parseSqlWhere() string
-	parseSqlInsertValue(values []valueSt) string
-	parseSqlUpdateValue(values []valueSt) string
-}
-
-func NewOrmParse(driver, dsn string) *OrmParse {
-	return &OrmParse{driver: driver, dsn: dsn}
+func NewOrmParse(driver, dsn string, maxopenconns, maxidleconns int) *OrmParse {
+	db, err := sql.Open(driver, dsn)
+	if err != nil {
+		panic(err)
+	}
+	db.SetMaxOpenConns(maxopenconns)
+	db.SetMaxIdleConns(maxidleconns)
+	return &OrmParse{db: db}
 }
 
 func (this *OrmParse) ParseSql(args map[string]interface{}) string {
@@ -183,15 +169,6 @@ func (this *OrmParse) parseSqlInsertValue(values []valueSt) string {
 	return fmt.Sprintf("(%s)VALUES(%s)", strings.Join(fields, ","), strings.Join(ovals, ","))
 }
 
-func (this *OrmParse) Open() {
-	var err error
-	this.db, err = sql.Open(this.driver, this.dsn)
-	if err != nil {
-		panic(err)
-	}
-	this.isOpend = true
-}
-
 func (this *OrmParse) GetAll(query string, offset, limit int) []map[string]string {
 	if limit != -1 {
 		query += fmt.Sprintf(" limit %d, %d", offset, limit)
@@ -241,8 +218,8 @@ func (this *OrmParse) fetch(res *sql.Rows, isonlyfirst bool) []map[string]string
 
 func (this *OrmParse) Execute(query string, sqlmode int8) interface{} {
 	var res interface{}
-	if !this.isOpend {
-		this.Open()
+	if err := this.db.Ping(); err != nil {
+		panic(err)
 	}
 	stmt, err := this.db.Prepare(query)
 	if err != nil {

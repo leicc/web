@@ -6,7 +6,6 @@ import (
 
 type OrmQuery struct {
 	data   map[string]interface{}
-	marks  []string
 	parser *OrmParse
 }
 
@@ -30,29 +29,8 @@ type whereSt struct {
 	logical string
 }
 
-type IOrmQueryer interface {
-	GetParse() *OrmParse
-	AsSQL(stype string) string
-	Clear(part string) *OrmQuery
-	Table(table ...string) *OrmQuery
-	Value(field, value, ftype string) *OrmQuery
-	Where(field string, args ...interface{}) *OrmQuery
-	Field(field string) *OrmQuery
-	OrderBy(field, order string) *OrmQuery
-	GroupBy(field ...string) *OrmQuery
-	Having(field string) *OrmQuery
-
-	Update(fields map[string]interface{}) int64
-	Insert(fields map[string]interface{}) int64
-	Delete() int64
-	GetRow() map[string]string
-	GetList(offset, limit int) []map[string]string
-	GetColumn(offset, limit int) []string
-	GetValue() string
-}
-
-func NewOrmQuery(driver, dsn string) *OrmQuery {
-	parser := NewOrmParse(driver, dsn)
+func NewOrmQuery(driver, dsn string, maxopenconns, maxidleconns int) *OrmQuery {
+	parser := NewOrmParse(driver, dsn, maxopenconns, maxidleconns)
 	return &OrmQuery{data: make(map[string]interface{}), parser: parser}
 }
 
