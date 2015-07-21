@@ -85,12 +85,12 @@ func (this *OrmQuery) GetRow() map[string]string {
 	return this.parser.GetFirst(query)
 }
 
-func (this *OrmQuery) GetList(offset, limit int) []map[string]string {
+func (this *OrmQuery) GetList(offset, limit int64) []map[string]string {
 	query := this.AsSQL("select")
 	return this.parser.GetAll(query, offset, limit)
 }
 
-func (this *OrmQuery) GetColumn(offset, limit int) []string {
+func (this *OrmQuery) GetColumn(offset, limit int64) []string {
 	query := this.AsSQL("select")
 	data := this.parser.GetAll(query, offset, limit)
 	column := make([]string, len(data))

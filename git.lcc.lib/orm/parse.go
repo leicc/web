@@ -118,6 +118,7 @@ func (this *OrmParse) parseSqlWhere(wheres []whereSt) string {
 					this.marks = append(this.marks, where.value)
 				}
 			}
+			logical = true
 		}
 	}
 	return strings.Join(ocwhere, " ")
@@ -169,7 +170,7 @@ func (this *OrmParse) parseSqlInsertValue(values []valueSt) string {
 	return fmt.Sprintf("(%s)VALUES(%s)", strings.Join(fields, ","), strings.Join(ovals, ","))
 }
 
-func (this *OrmParse) GetAll(query string, offset, limit int) []map[string]string {
+func (this *OrmParse) GetAll(query string, offset, limit int64) []map[string]string {
 	if limit != -1 {
 		query += fmt.Sprintf(" limit %d, %d", offset, limit)
 	}
@@ -181,11 +182,9 @@ func (this *OrmParse) GetAll(query string, offset, limit int) []map[string]strin
 
 func (this *OrmParse) GetFirst(query string) map[string]string {
 	query += " limit 1"
-	fmt.Println(query)
 	res := this.Execute(query, SQLMODE_QUERY)
 	rows, _ := res.(*sql.Rows)
 	datalist := this.fetch(rows, true)
-	fmt.Println(datalist)
 	if len(datalist) == 1 {
 		return datalist[0]
 	}

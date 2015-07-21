@@ -9,6 +9,12 @@ const (
 	DT_SQL         = "sql"
 	DT_AUTO        = "auto"
 	DT_BINARY      = "binary"
+	DT_BIGINT      = "int64"
+	DT_INT         = "int32"
+	DT_SMALLINT    = "int16"
+	DT_TINYINT     = "int8"
+	DT_FLOAT       = "float"
+	DT_STRING      = "string"
 	OP_AS          = "AS"
 	OP_MAX         = "MAX"
 	OP_MIN         = "MIN"
@@ -72,20 +78,108 @@ func DB(dbini string) *OrmQuery {
 type Model struct {
 	db     *OrmQuery
 	table  string
-	pri_id int64
+	pri_id string
+	dbini  string
 	fields map[string]string
 }
 
-func (this *Model) Init(dbini, table string, field map[string]string) {
+func (this *Model) Init(dbini, table, priid string, fields map[string]string) {
+	this.dbini = dbini
 	this.table = table
-	this.field = field
+	this.pri_id = priid
+	this.fields = fields
 	this.db = DB(dbini)
 }
 
-func (this *Model) NewOne(fields map[string]string) int64 {
-	this.db.Table(this.table).Insert(fields)
+func (this *Model) Query() *OrmQuery {
+	return DB(this.dbini)
+}
+
+func (this *Model) NewOne(fields map[string]interface{}) int64 {
+	return this.db.Clear().Table(this.table).Insert(fields)
 }
 
 func (this *Model) GetOne(id int64) map[string]string {
-	this.db.Table(this.table).Where(this.pri_id, id).GetRow()
+	return this.db.Clear().Table(this.table).Where(this.pri_id, id).GetRow()
+}
+
+func (this *Model) Save(fields map[string]interface{}) int64 {
+	return this.db.Clear().Table(this.table).Update(fields)
+}
+
+func (this *Model) Delete(id int64) int64 {
+	return this.db.Clear().Table(this.table).Where(this.pri_id, id).Delete()
+}
+
+func (this *Model) parseArgs(args ...interface{}) (fields, sort, dir string) {
+	nlen := len(args)
+	fields, sort, dir = "*", "", DESC
+	fisok, sisok, disok := false, false, false
+	if nlen == 0 {
+		return
+	} else if nlen == 1 {
+		fields, fisok = args[0].(string)
+		if fisok {
+			return
+		}
+	} else if nlen == 2 {
+		fields, fisok = args[0].(string)
+		sort, sisok = args[1].(string)
+		if sisok && fisok && sisok {
+			return
+		}
+	} else if nlen == 3 {
+		fields, fisok = args[0].(string)
+		sort, sisok = args[1].(string)
+		dir, disok = args[2].(string)
+		if fisok && sisok && disok {
+			return
+		}
+	}
+	panic("parse Args Argument Error!")
+}
+
+func (this *Model) Where(field string, value interface{}, args ...string) *Model {
+	this.db.Where(field, value, args...)
+	return this
+}
+
+func (this *Model) Clear(args ...string) *Model {
+	this.db.Clear(args...)
+	return this
+}
+
+func (this *Model) ListOnly(offset, limit int64, args ...interface{}) []map[string]string {
+	fields, sort, dir := this.parseArgs(args...)
+	if sort != "" && dir != "" {
+		this.db.OrderBy(sort, dir)
+	}
+	list := this.db.Table(this.table).Field(fields).GetList(offset, limit)
+	return list
+}
+
+func (this *Model) GetItem(args ...interface{}) map[string]string {
+	fields, sort, dir := this.parseArgs(args...)
+	if sort != "" && dir != "" {
+		this.db.OrderBy(sort, dir)
+	}
+	row := this.db.Table(this.table).Field(fields).GetRow()
+	return row
+}
+
+func (this *Model) GetList(offset, limit int64, args ...interface{}) map[string]interface{} {
+	fields, sort, dir := this.parseArgs(args...)
+	if sort != "" && dir != "" {
+		this.db.OrderBy(sort, dir)
+	}
+	sval := this.db.Table(this.table).Field("count(1) as num").GetValue()
+	total, err := strconv.ParseInt(sval, 10, 64)
+	if err != nil {
+		total = 0
+	}
+	var list []map[string]string
+	if total > 0 {
+		list = this.db.Clear("field").Field(fields).GetList(offset, limit)
+	}
+	return map[string]interface{}{"total": total, "list": list}
 }
